@@ -5,7 +5,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -18,148 +21,56 @@ import java.util.ArrayList;
 import java.util.List;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 
 
 public class App extends Application 
 {
-    public class MapService {
 
-        public void plotMarkers(List<PlantReport> reports, WebEngine webEngine) {
-            StringBuilder jsMarkers = new StringBuilder();
-    
-            for (PlantReport report : reports) {
-                double latitude = report.getLatitude();
-                double longitude = report.getLongitude();
-                jsMarkers.append("new mapboxgl.Marker().setLngLat([")
-                         .append(longitude)
-                         .append(", ")
-                         .append(latitude)
-                         .append("]).addTo(map);\n");
-            }
-    
-            String htmlContent = "<!DOCTYPE html>\n" +
-                    "<html>\n" +
-                    "<head>\n" +
-                    "    <script src=\"https://api.mapbox.com/mapbox-gl-js/v2.5.0/mapbox-gl.js\"></script>\n" +
-                    "    <link href=\"https://api.mapbox.com/mapbox-gl-js/v2.5.0/mapbox-gl.css\" rel=\"stylesheet\" />\n" +
-                    "    <script>\n" +
-                    "        mapboxgl.accessToken = 'YOUR_MAPBOX_ACCESS_TOKEN';\n" +
-                    "        function initMap() {\n" +
-                    "            var map = new mapboxgl.Map({\n" +
-                    "                container: 'map',\n" +
-                    "                style: 'mapbox://styles/mapbox/streets-v11',\n" +
-                    "                center: [-74.5, 40],\n" +
-                    "                zoom: 3\n" +
-                    "            });\n" +
-                    jsMarkers +
-                    "        }\n" +
-                    "    </script>\n" +
-                    "</head>\n" +
-                    "<body onload=\"initMap()\">\n" +
-                    "    <div id=\"map\" style=\"height: 100%; width: 100%;\"></div>\n" +
-                    "</body>\n" +
-                    "</html>";
-    
-            webEngine.loadContent(htmlContent);
-        }
-    }
-    public class PlantReport {
-        private int id;
-        private String plantName;
-        private String diseaseName;
-        private double latitude;
-        private double longitude;
-    
-        // Constructor, getters, and setters
-    
-        public PlantReport(int id, String plantName, String diseaseName, double latitude, double longitude) {
-            this.id = id;
-            this.plantName = plantName;
-            this.diseaseName = diseaseName;
-            this.latitude = latitude;
-            this.longitude = longitude;
-        }
-    
-        public int getId() {
-            return id;
-        }
-    
-        public String getPlantName() {
-            return plantName;
-        }
-    
-        public String getDiseaseName() {
-            return diseaseName;
-        }
-    
-        public double getLatitude() {
-            return latitude;
-        }
-    
-        public double getLongitude() {
-            return longitude;
-        }
-    }
-    public class PlantReportDAO {
-        public List<PlantReport> getAllReports() {
-            List<PlantReport> reports = new ArrayList<>();
-            String query = "SELECT * FROM disease_reports";
-            String url = "jdbc:mysql://localhost:3306/hackout";
-       String username = "root";
-       String password = "bhaikadata123@";
-       
-            try {
-                Connection con = DriverManager.getConnection(url, username, password);
-                 Statement stmt = con.createStatement();
-                 ResultSet rs = stmt.executeQuery(query); 
-                 try{
-    
-                while (rs.next()) {
-                    int id = rs.getInt("id");
-                    String plantName = rs.getString("plant_type");
-                    String diseaseName = rs.getString("disease_id");
-                    double latitude = rs.getDouble("latitude");
-                    double longitude = rs.getDouble("longitude");
-    
-                    reports.add(new PlantReport(id, plantName, diseaseName, latitude, longitude));
-                }
-                }
-                catch(Exception e)
-                {
-                    e.printStackTrace();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            return reports;
-        }
-    }
-    public void reportfinal(Stage primaryStage) {
-        WebView webView = new WebView();
-        WebEngine webEngine = webView.getEngine();
+    private TableView<App> table;
+   public void finalreport(Stage primaryStage) {
+        primaryStage.setTitle("Plant Disease Report");
 
-        // Get plant reports from database
-        PlantReportDAO reportDAO = new PlantReportDAO();
-        List<PlantReport> reports = reportDAO.getAllReports();
+        // Title
+        Text title = new Text("Plant Disease Report");
+        title.setStyle("-fx-font-size: 24px; -fx-font-weight: bold;");
 
-        // Plot the markers on the map
-        MapService mapService = new MapService();
-        mapService.plotMarkers(reports, webEngine);
+        // TableView for displaying the report
+        table = new TableView<>();
+        
 
-        try
-        {
-            Scene scene = new Scene(webView, 800, 600);
-            primaryStage.setTitle("Plant Disease Map");
+        // Setting up columns
+        TableColumn<App, String> plantNameColumn = new TableColumn<>("Plant Name");
+        plantNameColumn.setMinWidth(150);
+        plantNameColumn.setCellValueFactory(new PropertyValueFactory<>("plantName"));
+
+        TableColumn<App, String> diseaseColumn = new TableColumn<>("Disease");
+        diseaseColumn.setMinWidth(150);
+        diseaseColumn.setCellValueFactory(new PropertyValueFactory<>("disease"));
+
+        TableColumn<App, String> symptomsColumn = new TableColumn<>("Symptoms");
+        symptomsColumn.setMinWidth(200);
+        symptomsColumn.setCellValueFactory(new PropertyValueFactory<>("symptoms"));
+
+        TableColumn<App, String> treatmentColumn = new TableColumn<>("Treatment");
+        treatmentColumn.setMinWidth(200);
+        treatmentColumn.setCellValueFactory(new PropertyValueFactory<>("treatment"));
+
+        table.getColumns().addAll(plantNameColumn, diseaseColumn, symptomsColumn, treatmentColumn);
+
+        // Layout
+        VBox layout = new VBox(10);
+        layout.setPadding(new Insets(20, 20, 20, 20));
+        layout.getChildren().addAll(title, table);
+
+        Scene scene = new Scene(layout, 800, 400);
         primaryStage.setScene(scene);
         primaryStage.show();
-        }
-        catch(Exception e)
-        {
-            e.printStackTrace();
-        }
-
-        
     }
+    
+        
+    
     
     @Override
     public void start(Stage primaryStage) {
@@ -171,7 +82,7 @@ public class App extends Application
         grid.setVgap(10);
         grid.setPadding(new Insets(25, 25, 25, 25));
 
-        Text scenetitle = new Text("Welcome");
+        Text scenetitle = new Text("Welcome to plant disease tracking system");
         scenetitle.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
         grid.add(scenetitle, 0, 0, 2, 1);
 
@@ -245,39 +156,39 @@ plantTitle.setFont(Font.font("Tahoma", FontWeight.NORMAL, 20));
 plantGrid.add(plantTitle, 0, 0, 3, 1);
 
 
-Label userIdLabel = new Label("User ID:");
-plantGrid.add(userIdLabel, 0, 1);
+Label IdLabel = new Label("ID: ");
+plantGrid.add(IdLabel, 0, 1);
 
-TextField userIdTextField = new TextField();
-plantGrid.add(userIdTextField, 1, 1, 2, 1);
-
-
-Label plantType = new Label("Plant Type:");
-plantGrid.add(plantType, 0, 2);
-
-TextField typeTextField = new TextField();
-plantGrid.add(typeTextField, 1, 2, 2, 1);
+TextField IdTextField = new TextField();
+plantGrid.add(IdTextField, 1, 1, 2, 1);
 
 
-Label disLabel = new Label("Disease ID:");
+Label plantName = new Label("Plant Name :");
+plantGrid.add(plantName, 0, 2);
+
+TextField pname = new TextField();
+plantGrid.add(pname, 1, 2, 2, 1);
+
+
+Label disLabel = new Label("Disease Name :");
 plantGrid.add(disLabel, 0, 3);
 
 TextField plantdisTextField = new TextField();
 plantGrid.add(plantdisTextField, 1, 3, 2, 1);
 
 
-Label treatlabel = new Label("Treatment Used:");
-plantGrid.add(treatlabel, 0, 4);
+Label latlabel = new Label("Latitude :");
+plantGrid.add(latlabel, 0, 4);
 
-TextField trtTextField = new TextField();
-plantGrid.add(trtTextField, 1, 4, 2, 1);
+TextField ltTextField = new TextField();
+plantGrid.add(ltTextField, 1, 4, 2, 1);
 
 
-Label locationLabel = new Label("Location:");
-plantGrid.add(locationLabel, 0, 5);
+Label longLabel = new Label("Longitude :");
+plantGrid.add(longLabel, 0, 5);
 
-TextField locationTextField = new TextField();
-plantGrid.add(locationTextField, 1, 5, 2, 1);
+TextField lTextField = new TextField();
+plantGrid.add(lTextField, 1, 5, 2, 1);
 
 
 Button submitBtn = new Button("Generate Report");
@@ -294,19 +205,19 @@ GridPane.setMargin(submitBtn, new Insets(10, 0, 0, 0));
 
         submitBtn.setOnAction(e -> {
             
-            String userId = userIdTextField.getText();
-            String plantype = typeTextField.getText();
-            String treat = trtTextField.getText();
+            String Id = IdTextField.getText();
+            String plantname = pname.getText();
+            String latt = ltTextField.getText();
             String dis = plantdisTextField.getText();
-            String location = locationTextField.getText();
+            String lonng = lTextField.getText();
 
-            System.out.println("User ID: " + userId);
-            System.out.println("Plant Type: " + plantype);
-            System.out.println("Diseas : " + dis);
-            System.out.println("TreatMent : "+treat);
-            System.out.println("Location: " + location);
-            reportDiseas(userId, plantype, dis, location, treat);
-            reportfinal(primaryStage);
+            System.out.println("ID: " + Id);
+            System.out.println("Plant Name : " + plantname);
+            System.out.println("Diseas name : " + dis);
+            System.out.println("latitude : "+latt);
+            System.out.println("Longitude : " + lonng);
+            reportDiseas(Id, plantname, dis, latt, lonng);
+            finalreport(primaryStage);
         });
 
         Scene plantScene = new Scene(plantGrid, 400, 375);
@@ -359,7 +270,7 @@ GridPane.setMargin(submitBtn, new Insets(10, 0, 0, 0));
         e.printStackTrace();
     }
   }
-  public static void reportDiseas(String userid,String type,String diseasid,String loc,String treatment)
+  public static void reportDiseas(String id,String name,String diseasname,String lat,String longg)
   {
     try
     {
@@ -367,14 +278,14 @@ GridPane.setMargin(submitBtn, new Insets(10, 0, 0, 0));
        String username = "root";
        String password = "bhaikadata123@";
        Connection con = DriverManager.getConnection(url, username, password);
-    String q = "insert into disease_reports(user_id,plant_type,disease_id,location,treatment_used) values(?,?,?,?,?)";
+    String q = "insert into disease_reports(user_id,plant_name,disease_name,latitude,longitude) values(?,?,?,?,?)";
     PreparedStatement p = con.prepareStatement(q);
 
-    p.setString(1, userid);
-    p.setString(2, type);
-    p.setString(3, diseasid);
-    p.setString(4, loc);
-    p.setString(5, treatment);
+    p.setString(1, id);
+    p.setString(2, name);
+    p.setString(3, diseasname);
+    p.setString(4, lat);
+    p.setString(5, longg);
    
     p.executeUpdate();
     con.close();
@@ -384,10 +295,10 @@ GridPane.setMargin(submitBtn, new Insets(10, 0, 0, 0));
       e.printStackTrace();
     }
   }
+}
 
 
-
-  }
+  
 
   
 
