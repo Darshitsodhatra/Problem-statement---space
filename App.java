@@ -235,7 +235,7 @@ GridPane.setMargin(submitBtn, new Insets(10, 0, 0, 0));
     {
        String url = "jdbc:mysql://localhost:3306/hackout";
        String username = "root";
-       String password = "bhaikadata123@";
+       String password = "";
        Connection con = DriverManager.getConnection(url, username, password);
        
        if(con.isClosed())
